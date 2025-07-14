@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup, Tag
-
 import csv
+from textblob import TextBlob
 
 def scrape_all_quotes(base_url):
     url = base_url
@@ -17,10 +17,13 @@ def scrape_all_quotes(base_url):
             text = quote.find('span', class_='text').get_text()
             author = quote.find('small', class_='author').get_text()
             tags = [tag.get_text() for tag in quote.find_all('a', class_='tag')]
+            # Sentiment analysis
+            sentiment = TextBlob(text).sentiment.polarity
             all_quotes.append({
                 'text': text,
                 'author': author,
-                'tags': ', '.join(tags)
+                'tags': ', '.join(tags),
+                'sentiment': sentiment
             })
         # Find next page
         next_btn = soup.find('li', class_='next')
@@ -37,7 +40,7 @@ def scrape_all_quotes(base_url):
 
 def save_quotes_to_csv(quotes, filename):
     with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ['text', 'author', 'tags']
+        fieldnames = ['text', 'author', 'tags', 'sentiment']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for quote in quotes:
